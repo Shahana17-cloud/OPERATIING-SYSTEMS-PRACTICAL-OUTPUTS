@@ -1,0 +1,30 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main()
+{
+    int child1, child2;
+
+    child1 = fork();   // Create first child
+
+    if (child1 == 0)
+    {
+        printf("First Child Process ID = %d\n", getpid());
+        return 0;
+    }
+
+    child2 = fork();   // Create second child
+
+    if (child2 == 0)
+    {
+        printf("Second Child Process ID = %d\n", getpid());
+        return 0;
+    }
+
+    // Parent process waits for both children
+    wait(NULL);
+    wait(NULL);
+
+    return 0;
+}
