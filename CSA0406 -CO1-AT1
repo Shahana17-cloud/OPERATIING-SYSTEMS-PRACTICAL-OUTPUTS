@@ -1,0 +1,76 @@
+CO1-ASSESSMENT TOOL 1
+CSA0406-OPERATING SYSTEM 
+NAME: SHAHANA K
+REG NO:192524032
+SLOT A
+
+
+1.(A) Multi-user Operating system -it allows multiple users to use the same computer system processes.
+1.(b) Schedules Cpu time among processes
+(i)Manages memory and system resources 
+
+1.(c)START
+Create child process using fork()
+IF child process THEN
+    Display Child PID
+ELSE
+    Display Parent PID and Child PID
+END IF
+STOP
+
+2.(A) creat(),write(),read(),close()
+
+2.(b) write ()-write data into a file 
+(ii) read()-reads data from a line 
+
+2.(c)Pseudo code to create a file, write a student name, and close it
+START
+Create a file
+Write student name into the file
+Close the file
+STOP
+
+3.(A) open(),read(),write(),close()
+
+3.(b) read()-reads data from the source file 
+(iii) write()-write data to the destination file 
+
+3.(C)Pseudo code to copy contents from one file to another
+START
+Open source file
+Open destination file
+Read data from source file
+Write data into destination file
+Close both files
+STOP
+
+4.(a)State the purpose of fork() and exec()
+fork()-create a new child process
+exec()-replaces the current process with a new program 
+
+(b) Explain the role of wait() system call.
+write () make the parent process wait until the child process finishes execution
+
+(c) Pseudo code using fork(), exec(), and wait()
+START
+Create child process using fork()
+IF child process THEN
+    Execute new program using exec()
+ELSE
+    Wait until child process completes
+END IF
+STOP
+
+5.(A) file management organises ,stores,retrieves ,and protect files effciently
+(B) open()-opens a file for reading or writing .
+close()-closes the files after use .
+
+(c) Pseudo code to open a file, read its contents, and close it.
+START
+Open the file
+Read the file contents
+Close the file
+STOP
+
+
+
