@@ -1,0 +1,24 @@
+#include<stdio.h>
+#include<fcntl.h>
+#include<unistd.h>
+
+int main()
+{
+    int source, dest;
+    char ch;
+
+    source = open("input.txt", O_RDONLY);
+    dest = open("output.txt", O_WRONLY | O_CREAT, 0644);
+
+    while(read(source, &ch, 1) > 0)
+    {
+        write(dest, &ch, 1);
+    }
+
+    close(source);
+    close(dest);
+
+    printf("File Copied Successfully");
+
+    return 0;
+}
