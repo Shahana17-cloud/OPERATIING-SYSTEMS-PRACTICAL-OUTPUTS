@@ -1,0 +1,130 @@
+CO3-ASSESSMENT TOOL 1 
+EXPERMENTS 
+NAME:SHAHANA K
+REGNO:192524032
+COURSE:CSA0406 -OPERATING SYSTEM 
+CLOT A
+
+
+1.#include<stdio.h>
+int main()
+{
+    int base,limit,la;
+    printf("Base Limit Logical: ");
+    scanf("%d%d%d",&base,&limit,&la);
+
+    if(la<limit)
+        printf("Physical Address = %d",base+la);
+    else
+        printf("Invalid Address");
+
+    return 0;
+}
+OUTPUT:
+Base Limit Logical: 1000
+500
+200
+Physical Address = 1200
+
+2.#include<stdio.h>
+int main()
+{
+    int pt[10],n,p,o;
+    printf("No. of Pages: ");
+    scanf("%d",&n);
+
+    printf("Frame Numbers:\n");
+    for(int i=0;i<n;i++)
+        scanf("%d",&pt[i]);
+
+    printf("Page Offset: ");
+    scanf("%d%d",&p,&o);
+
+    printf("Physical Address = %d",pt[p]*100+o);
+
+    return 0;
+}
+OUTPUT:
+No. of Pages: 4
+Frame Numbers:
+5
+8
+2
+9
+Page Offset: 2 
+2 50
+Physical Address = 202
+
+3.#include<stdio.h>
+int main()
+{
+    int pt[10],n,p,o;
+    printf("Pages: ");
+    scanf("%d",&n);
+
+    for(int i=0;i<n;i++)
+    {
+        printf("Frame for Page %d: ",i);
+        scanf("%d",&pt[i]);
+    }
+
+    printf("Page Offset: ");
+    scanf("%d%d",&p,&o);
+
+    printf("Page %d -> Frame %d\n",p,pt[p]);
+    printf("Physical Address = %d",pt[p]*100+o);
+
+    return 0;
+}
+
+OUTPUT:
+Pages: 3
+Frame for Page 0: 4
+Frame for Page 1: 7
+Frame for Page 2: 9
+Page Offset: 1
+20
+Page 1 -> Frame 7
+Physical Address = 720
+
+4.#include<stdio.h>
+int main()
+{
+    float m,t,h;
+    printf("Memory TLB HitRatio: ");
+    scanf("%f%f%f",&m,&t,&h);
+
+    printf("Without TLB = %.2f\n",2*m);
+    printf("With TLB = %.2f",h*(t+m)+(1-h)*(t+2*m));
+
+    return 0;
+}
+
+OUTPUT:
+Memory TLB HitRatio: 100
+10
+.08
+Without TLB = 200.00
+With TLB = 202.00
+
+5.#include<stdio.h>
+int main()
+{
+    int base,limit,la;
+    printf("Base Limit Logical: ");
+    scanf("%d%d%d",&base,&limit,&la);
+
+    if(la>=0 && la<limit)
+        printf("Access Allowed\nPhysical Address = %d",base+la);
+    else
+        printf("Access Denied");
+
+    return 0;
+}
+
+OUTPUT:
+Base Limit Logical: 1000
+500
+300
+Access Allowed
+Physical Address = 1300
