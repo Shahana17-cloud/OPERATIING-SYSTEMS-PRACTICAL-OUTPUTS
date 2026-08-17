@@ -1,0 +1,462 @@
+CO3-AT2 
+CSA0406-OPERATING SYSTEMS
+NAME:SHAHANA K
+REGNO:192524032
+
+print("FILE ALLOCATION METHODS")
+
+n = int(input("Enter total number of blocks: "))
+blocks = int(input("Enter number of blocks required: "))
+
+print("\n1. Contiguous Allocation")
+print("2. Linked Allocation")
+print("3. Indexed Allocation")
+
+choice = int(input("Enter your choice: "))
+
+# Contiguous Allocation
+if choice == 1:
+    start = int(input("Enter starting block: "))
+
+    if start + blocks <= n:
+        print("\nContiguous Allocation Successful!")
+        print("Allocated blocks:", end=" ")
+
+        for i in range(start, start + blocks):
+            print(i, end=" ")
+
+        print("\n")
+    else:
+        print("\nAllocation Failed!")
+        print("Not enough blocks available.")
+
+# Linked Allocation
+elif choice == 2:
+    print("\nEnter", blocks, "block numbers:")
+
+    allocated = []
+
+    for i in range(blocks):
+        b = int(input("Block: "))
+
+        if b < 0 or b >= n:
+            print("Invalid block number!")
+            break
+
+        allocated.append(b)
+
+    if len(allocated) == blocks:
+        print("\nLinked Allocation Successful!")
+        print("Allocated blocks:", allocated)
+
+        print("Linked order:", end=" ")
+        for i in range(len(allocated)):
+            print(allocated[i], end=" ")
+            if i < len(allocated) - 1:
+                print("->", end=" ")
+
+        print()
+
+# Indexed Allocation
+elif choice == 3:
+
+    if blocks + 1 > n:
+        print("\nAllocation Failed!")
+        print("Not enough blocks for index block and data blocks.")
+    else:
+        index = int(input("Enter index block: "))
+
+        print("Enter", blocks, "data block numbers:")
+
+        data = []
+
+        for i in range(blocks):
+            b = int(input("Block: "))
+            data.append(b)
+
+        print("\nIndexed Allocation Successful!")
+        print("Index Block:", index)
+        print("Data Blocks:", data)
+
+else:
+    print("Invalid choice!")
+
+
+2.print("BITMAP FREE SPACE MANAGEMENT")
+
+n = int(input("Enter total number of disk blocks: "))
+
+# 0 = Free, 1 = Allocated
+bitmap = [0] * n
+
+print("\nInitial Bitmap:")
+print(bitmap)
+
+blocks = int(input("\nEnter number of blocks required: "))
+
+free_blocks = bitmap.count(0)
+
+if blocks > free_blocks:
+    print("\nAllocation Failed!")
+    print("Not enough free blocks available.")
+else:
+    allocated = []
+
+    for i in range(n):
+        if bitmap[i] == 0 and len(allocated) < blocks:
+            bitmap[i] = 1
+            allocated.append(i)
+
+    print("\nAllocation Successful!")
+    print("Allocated Blocks:", allocated)
+
+    print("\nUpdated Bitmap:")
+    print(bitmap)
+
+    print("\nFree Blocks:", bitmap.count(0))
+    print("Allocated Blocks:", bitmap.count(1))
+3.print("DISK SCHEDULING")
+
+requests = list(map(int, input("Enter disk requests: ").split()))
+head = int(input("Enter initial head position: "))
+
+print("\n1. FCFS")
+print("2. SSTF")
+print("3. SCAN")
+
+choice = int(input("Enter your choice: "))
+
+
+# FCFS
+if choice == 1:
+
+    order = requests.copy()
+    current = head
+    total = 0
+
+    for r in order:
+        total += abs(current - r)
+        current = r
+
+    print("\nFCFS Order:", order)
+    print("Total Head Movement:", total)
+
+
+# SSTF
+elif choice == 2:
+
+    remaining = requests.copy()
+    order = []
+    current = head
+    total = 0
+
+    while remaining:
+        closest = min(remaining, key=lambda x: abs(current - x))
+
+        total += abs(current - closest)
+        current = closest
+
+        order.append(closest)
+        remaining.remove(closest)
+
+    print("\nSSTF Order:", order)
+    print("Total Head Movement:", total)
+
+
+# SCAN
+elif choice == 3:
+
+    disk_size = int(input("Enter disk size: "))
+    direction = input("Enter direction (left/right): ").lower()
+
+    left = []
+    right = []
+
+    for r in requests:
+        if r < head:
+            left.append(r)
+        else:
+            right.append(r)
+
+    left.sort()
+    right.sort()
+
+    order = []
+    current = head
+    total = 0
+
+    if direction == "left":
+
+        for r in reversed(left):
+            order.append(r)
+
+        # Move to beginning of disk
+        order.append(0)
+
+        for r in right:
+            order.append(r)
+
+    elif direction == "right":
+
+        for r in right:
+            order.append(r)
+
+        # Move to end of disk
+        order.append(disk_size - 1)
+
+        for r in reversed(left):
+            order.append(r)
+
+    else:
+        print("Invalid direction!")
+        exit()
+
+    for r in order:
+        total += abs(current - r)
+        current = r
+
+    print("\nSCAN Order:", order)
+    print("Total Head Movement:", total)
+
+
+else:
+    print("Invalid choice!")
+
+4.print("C-SCAN AND LOOK DISK SCHEDULING")
+
+requests = list(map(int, input("Enter disk requests: ").split()))
+head = int(input("Enter initial head position: "))
+
+print("\n1. C-SCAN")
+print("2. LOOK")
+
+choice = int(input("Enter your choice: "))
+
+# C-SCAN
+if choice == 1:
+
+    disk_size = int(input("Enter disk size: "))
+    direction = input("Enter direction (left/right): ").lower()
+
+    left = []
+    right = []
+
+    for r in requests:
+        if r < head:
+            left.append(r)
+        else:
+            right.append(r)
+
+    left.sort()
+    right.sort()
+
+    order = []
+    current = head
+    total = 0
+
+    if direction == "right":
+
+        # Service requests to the right
+        for r in right:
+            order.append(r)
+
+        # Go to end of disk
+        order.append(disk_size - 1)
+
+        # Jump to beginning
+        order.append(0)
+
+        # Service remaining requests
+        for r in left:
+            order.append(r)
+
+    elif direction == "left":
+
+        # Service requests to the left
+        for r in reversed(left):
+            order.append(r)
+
+        # Go to beginning
+        order.append(0)
+
+        # Jump to end
+        order.append(disk_size - 1)
+
+        # Service remaining requests
+        for r in reversed(right):
+            order.append(r)
+
+    else:
+        print("Invalid direction!")
+        exit()
+
+    for r in order:
+        total += abs(current - r)
+        current = r
+
+    print("\nC-SCAN Order:", order)
+    print("Total Head Movement:", total)
+
+
+# LOOK
+elif choice == 2:
+
+    direction = input("Enter direction (left/right): ").lower()
+
+    left = []
+    right = []
+
+    for r in requests:
+        if r < head:
+            left.append(r)
+        else:
+            right.append(r)
+
+    left.sort()
+    right.sort()
+
+    order = []
+    current = head
+    total = 0
+
+    if direction == "right":
+
+        # Service requests on the right
+        for r in right:
+            order.append(r)
+
+        # Reverse direction
+        for r in reversed(left):
+            order.append(r)
+
+    elif direction == "left":
+
+        # Service requests on the left
+        for r in reversed(left):
+            order.append(r)
+
+        # Reverse direction
+        for r in right:
+            order.append(r)
+
+    else:
+        print("Invalid direction!")
+        exit()
+
+    for r in order:
+        total += abs(current - r)
+        current = r
+
+    print("\nLOOK Order:", order)
+    print("Total Head Movement:", total)
+
+
+else:
+    print("Invalid choice!")
+
+5.print("INTEGRATED FILE ALLOCATION AND DISK SCHEDULING")
+
+# ---------------- FILE ALLOCATION ----------------
+
+n = int(input("Enter total number of disk blocks: "))
+blocks = int(input("Enter number of blocks required for file: "))
+
+print("\nFILE ALLOCATION")
+print("1. Contiguous")
+print("2. Linked")
+print("3. Indexed")
+
+choice = int(input("Enter allocation method: "))
+
+allocated = []
+
+if choice == 1:
+    start = int(input("Enter starting block: "))
+
+    if start + blocks <= n:
+        for i in range(start, start + blocks):
+            allocated.append(i)
+
+        print("Allocated Blocks:", allocated)
+
+    else:
+        print("Allocation Failed!")
+
+elif choice == 2:
+    print("Enter", blocks, "block numbers:")
+
+    for i in range(blocks):
+        b = int(input("Block: "))
+        allocated.append(b)
+
+    print("Allocated Blocks:", allocated)
+
+elif choice == 3:
+    index = int(input("Enter index block: "))
+
+    print("Enter", blocks, "data blocks:")
+
+    for i in range(blocks):
+        b = int(input("Block: "))
+        allocated.append(b)
+
+    print("Index Block:", index)
+    print("Data Blocks:", allocated)
+
+else:
+    print("Invalid allocation method!")
+    exit()
+
+
+# ---------------- DISK SCHEDULING ----------------
+
+print("\nDISK SCHEDULING")
+print("1. FCFS")
+print("2. SSTF")
+
+schedule = int(input("Enter scheduling method: "))
+
+head = int(input("Enter initial head position: "))
+
+# FCFS
+if schedule == 1:
+
+    order = allocated.copy()
+    current = head
+    total = 0
+
+    for block in order:
+        total += abs(current - block)
+        current = block
+
+    print("\nFCFS Order:", order)
+    print("Total Head Movement:", total)
+
+
+# SSTF
+elif schedule == 2:
+
+    remaining = allocated.copy()
+    order = []
+    current = head
+    total = 0
+
+    while remaining:
+
+        closest = min(
+            remaining,
+            key=lambda x: abs(current - x)
+        )
+
+        total += abs(current - closest)
+        current = closest
+
+        order.append(closest)
+        remaining.remove(closest)
+
+    print("\nSSTF Order:", order)
+    print("Total Head Movement:", total)
+
+
+else:
+    print("Invalid scheduling method!")
