@@ -1,0 +1,1291 @@
+CO5-ASSESSMENT TOOL 1 
+CSA0406-OPERATING SYSTEM 
+NAME:SHAHANA K
+REGNO :192524032
+SLOT A
+
+# CONSTRAINT BASED PROBLEM SOLVING USING LINUX
+This assignment focuses on solving practical Linux system administration and resource management problems under 
+specific constraints.
+The problems covered are:
+1. Optimized Linux file system layout and log management
+2. CPU scheduling and context-switch optimization
+3. Efficient processing of 1 million log entries using shell scripting
+4. Identification, monitoring, and control of a faulty process
+5. RAM allocation for virtual machines using virtualization concepts
+
+1. Optimized Linux File System Layout and Log Management
+
+(i)Problem Statement:
+A server has a total storage capacity of 50 GB and needs to effectively manage rapidly growing system logs, user files, and 
+application data.
+The system must ensure that:
+* Log files do not exceed 10 GB.
+* Critical services continue to operate.
+* Disk space is efficiently utilized.
+* System stability is maintained.
+* Rapidly growing logs do not consume the entire root filesystem.
+(ii)Objective
+The objective is to design an optimized Linux file system layout and implement suitable log management techniques such as log rotation and monitoring.
+Proposed File System Layout
+ Partition            Size  Purpose                                 
+ `/boot/efi`          1 GB  Boot files                              
+ `/`                 12 GB  Linux operating system and applications 
+ `/var`               6 GB  Variable application and system data    
+ `/var/log`          10 GB  System and application logs             
+ `/home`             15 GB  User files                              
+ `swap`               4 GB  Virtual memory                          
+ Reserved Space       2 GB  Future expansion and safety margin      
+ **Total**       **50 GB**                                          
+ Explanation of the Partitioning
+ `/boot/efi`
+This partition stores the files required for booting the operating system.
+ `/`
+The root partition contains the Linux operating system, installed applications, configuration files, and other essential system files.
+### `/var`
+The `/var` directory contains frequently changing data such as application data, caches, queues, and databases.
+### `/var/log`
+A separate 10 GB area is allocated for logs.
+This is important because logs can grow rapidly. If logs were stored directly under `/`, they could consume the entire root filesystem and cause critical services to stop 
+working.
+### `/home`
+This partition stores user files and personal data.
+### Swap
+Swap provides additional virtual memory when physical RAM is insufficient.
+### Reserved Space
+2 GB is kept available for future expansion and unexpected storage requirements.
+## Why Should `/var/log` Be Separated?
+Suppose the root filesystem contains the operating system and logs together.
+If logs suddenly grow from 5 GB to 20 GB, they may consume all available space in `/`.
+This can cause:
+* Applications to fail
+* Services to stop
+* System updates to fail
+* Database operations to fail
+* System instability
+By separating `/var/log`, log growth is isolated from the root filesystem.
+## Checking Disk Usage
+The `df` command can be used to check filesystem usage.
+```bash
+df -h
+```
+### Explanation
+* `df` means disk filesystem.
+* `-h` displays sizes in a human-readable format such as GB and MB.
+## Checking Log Directory Size
+```bash
+du -sh /var/log
+```
+### Explanation
+* `du` displays disk usage.
+* `-s` displays only the total.
+* `-h` displays the result in human-readable format.
+## Finding Large Log Files
+```bash
+du -ah /var/log | sort -rh | head -10
+```
+### Explanation
+* `du -ah` lists files and directories with their sizes.
+* `sort -rh` sorts the results from largest to smallest.
+* `head -10` displays the top 10 largest entries.
+# Log Rotation
+Linux provides a utility called `logrotate` for automatically managing log files.
+Create a configuration file:
+```bash
+sudo nano /etc/logrotate.d/application
+```
+Add the following configuration:
+```text
+/var/log/application/*.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    maxsize 1G
+}
+```
+---
+## Explanation of Logrotate Options
+---
+# Log Monitoring Shell Script
+Create a file named:
+```text
+log_monitor.sh
+```
+Code:
+```bash
+#!/bin/bash
+LOG_DIR="/var/log"
+MAX_SIZE=10
+CURRENT_SIZE=$(du -sm "$LOG_DIR" | awk '{print $1}')
+echo "Current log usage: ${CURRENT_SIZE} MB"
+echo "Maximum allowed: ${MAX_SIZE} GB"
+MAX_MB=$((MAX_SIZE * 1024))
+if [ "$CURRENT_SIZE" -ge "$MAX_MB" ]; then
+    echo "WARNING: Log directory has reached the 10 GB limit!"
+    logger "WARNING: /var/log has reached the 10 GB limit"
+    echo "Running log rotation..."
+    logrotate -f /etc/logrotate.conf
+else
+    REMAINING=$((MAX_MB - CURRENT_SIZE))
+echo "Log space remaining: ${REMAINING} MB"
+    echo "Log storage is within the limit."
+fi
+```
+## Running the Program
+Give execute permission:
+```bash
+chmod +x log_monitor.sh
+```
+Run the program:
+```bash
+sudo ./log_monitor.sh
+```
+---
+## Code Explanation
+### Step 1
+
+```bash
+LOG_DIR="/var/log"
+```
+
+Stores the path of the Linux log directory in a variable.
+
+### Step 2
+
+```bash
+MAX_SIZE=10
+```
+
+Defines the maximum allowed log storage as 10 GB.
+
+### Step 3
+
+```bash
+CURRENT_SIZE=$(du -sm "$LOG_DIR" | awk '{print $1}')
+```
+
+This calculates the current size of `/var/log` in MB.
+
+`du -sm` gives the size in MB.
+
+`awk` extracts only the numerical value.
+
+### Step 4
+
+```bash
+MAX_MB=$((MAX_SIZE * 1024))
+```
+Converts the maximum limit from GB to MB.
+10 GB is converted to:
+```text
+10 × 1024 = 10240 MB
+```
+Step 5
+```bash
+if [ "$CURRENT_SIZE" -ge "$MAX_MB" ]
+```
+Checks whether the current log usage is greater than or equal to the maximum allowed size.
+###step 6
+```bash
+logrotate -f /etc/logrotate.conf
+```
+Forces log rotation when the limit is reached.
+This helps free storage by rotating and compressing old logs.
+---
+## Sample Output
+```text
+Current log usage: 6340 MB
+Maximum allowed: 10 GB
+Log space remaining: 3900 MB
+Log storage is within the limit.
+```
+When the limit is reached:
+```text
+Current log usage: 10300 MB
+Maximum allowed: 10 GB
+WARNING: Log directory has reached the 10 GB limit!
+Running log rotation...
+```
+---
+## Conclusion
+A separate `/var/log` partition, combined with logrotate and monitoring, prevents rapidly growing logs from consuming the entire disk.
+The proposed layout uses the 50 GB storage efficiently while protecting critical system files and services.
+--
+
+
+Q2. CPU Scheduling and Context-Switch Optimization
+## Problem Statement
+A Linux system handling high CPU workloads suffers from frequent context-switching delays.
+Hardware upgrades are not possible, and real-time processing must be supported.
+The system must be optimized using kernel-level techniques such as:
+* CPU affinity
+* Process priority
+* Scheduling policies
+* Kernel tuning
+* Kernel modules
+---
+## Objective
+The objective is to reduce unnecessary context switching, improve CPU utilization, and provide better response time for real-time workloads without upgrading the hardware.
+---
+## What is Context Switching?
+Context switching occurs when the CPU stops executing one process and starts executing another process.
+During a context switch, the operating system must save the state of the current process and load the state of another process.
+Frequent context switching creates overhead because CPU time is spent switching between processes instead of performing useful work.
+---
+## Step 1: Monitor Context Switching
+Use:
+```bash
+vmstat 1
+```
+The `cs` column represents the number of context switches per second.
+Another useful command is:
+```bash
+pidstat -w 1
+```
+This displays process-level context-switch information.
+---
+# Step 2: CPU Affinity
+Suppose the high CPU process has PID 2450.
+Check its current CPU affinity:
+```bash
+taskset -cp 2450
+```
+Assign the process to CPUs 0 to 3:
+```bash
+sudo taskset -cp 0-3 2450
+```
+---
+## Explanation
+CPU affinity controls which CPU cores a process can use.
+If a process is allowed to move between many CPU cores, the scheduler may migrate it frequently.
+Restricting it to selected CPUs can reduce unnecessary migration and improve cache efficiency.
+---
+# Step 3: Process Priority
+For a background workload, the priority can be reduced using `nice`.
+For a new process:
+```bash
+nice -n 10 ./program
+```
+For an existing process:
+```bash
+sudo renice 10 -p 2450
+```
+---
+## Explanation
+Linux uses a `nice` value to influence process scheduling.
+A higher nice value gives the process lower scheduling priority.
+This allows important processes to receive CPU time before less important background processes.
+---
+# Step 4: Real-Time Scheduling
+For applications that require real-time processing, Linux provides real-time scheduling policies.
+Example:
+```bash
+sudo chrt -f 80 ./realtime_program
+```
+### Explanation
+* `chrt` changes the scheduling policy.
+* `-f` specifies FIFO scheduling.
+* `80` is the real-time priority.
+Real-time scheduling should be used carefully because an incorrectly configured process can consume CPU resources and affect other processes.
+---
+# Step 5: Kernel Scheduler Tuning
+View scheduler parameters:
+```bash
+sysctl -a | grep sched
+```
+A scheduler parameter can be modified using:
+```bash
+sudo sysctl kernel.sched_migration_cost_ns=500000
+```
+To make the change persistent:
+```bash
+sudo nano /etc/sysctl.d/99-sceduler.conf
+```
+Add:
+```text
+kernel.sched_migration_cost_ns = 500000
+```
+Apply the configuration:
+```bash
+sudo sysctl --system
+```
+---
+# CPU Optimization Shell Script
+Create:
+```text
+cpu_optimize.sh
+```
+Code:
+```bash
+#!/bin/bash
+PID=$1
+if [ -z "$PID" ]; then
+    echo "Usage: $0 <PID>"
+    exit 1
+fi
+if ! ps -p "$PID" > /dev/null; then
+  echo "Process $PID does not exist."
+    exit 1
+fi
+echo "================================"
+echo "CPU PROCESS OPTIMIZATION"
+echo "================================"
+echo
+echo "Process information:"
+ps -p "$PID" -o pid,comm,%cpu,%mem
+echo
+echo "Current CPU affinity:"
+taskset -cp "$PID"
+echo
+echo "Setting CPU affinity to CPUs 0-3..."
+sudo taskset -cp 0-3 "$PID"
+echo
+echo "Changing process priority..."
+sudo renice 10 -p "$PID"
+echo
+echo "Updated process information:"
+ps -p "$PID" -o pid,comm,%cpu,%mem
+echo
+echo "CPU optimization completed."
+```
+---
+## Running the Program
+```bash
+chmod +x cpu_optimize.sh
+```
+Run it by providing the process ID:
+```bash
+sudo ./cpu_optimize.sh 2450
+```
+---
+## Sample Output
+```text
+================================
+CPU PROCESS OPTIMIZATION
+================================
+Process information:
+ PID   COMMAND      %CPU   %MEM
+2450   workload     89.4   2.1
+Current CPU affinity:
+pid 2450's current affinity list: 0-7
+Setting CPU affinity to CPUs 0-3...
+pid 2450's new affinity list: 0-3
+Changing process priority...
+2450 (process ID) old priority 0, new priority 10
+Updated process information:
+ PID   COMMAND      %CPU   %MEM
+2450   workload     65.2   2.1
+CPU optimization completed.
+```
+---
+##Conclusion
+CPU affinity reduces unnecessary CPU migration, while process priority prevents background workloads from dominating CPU resources.
+Kernel scheduling policies and scheduler tuning can further improve system responsiveness.
+Therefore, software-level optimization can reduce context-switching overhead without requiring a hardware upgrade.
+
+# Q3. Processing 1 Million Log Entries Within 2 Minutes
+
+## Problem Statement
+
+An administrator must process 1 million log entries per day using only shell scripting.
+
+The script must complete the processing within 2 minutes.
+
+---
+
+## Objective
+
+The objective is to design an efficient shell script using optimized Linux commands so that 1 million log entries can be processed within the required time limit.
+
+---
+
+## Why Efficient Commands Are Required
+
+A command pipeline such as:
+
+```bash
+cat system.log | grep ERROR | cut -d' ' -f1 | sort | uniq
+```
+
+creates multiple processes and may require several passes through the data.
+
+For simple log analysis, `awk` is more efficient because it can process the file line by line in a single pass.
+
+---
+
+# Algorithm
+
+1. Read the log file.
+2. Process each line using `awk`.
+3. Detect lines containing `ERROR`.
+4. Increment an error counter.
+5. Display the total number of errors.
+6. Measure execution time.
+7. Check whether the execution time is within 120 seconds.
+
+---
+
+# Shell Script
+
+Create:
+
+```text
+process_logs.sh
+```
+
+Code:
+
+```bash
+#!/bin/bash
+
+LOGFILE="system.log"
+
+echo "Processing log file..."
+echo "File: $LOGFILE"
+
+START=$(date +%s)
+
+LC_ALL=C awk '
+/ERROR/ {
+    error_count++
+}
+END {
+    print "Total ERROR entries:", error_count
+}
+' "$LOGFILE"
+
+END=$(date +%s)
+
+ELAPSED=$((END - START))
+
+echo "Processing time: ${ELAPSED} seconds"
+
+if [ "$ELAPSED" -le 120 ]; then
+    echo "SUCCESS: Processing completed within 2 minutes."
+else
+    echo "FAILURE: Processing exceeded 2 minutes."
+fi
+```
+
+---
+
+## Running the Program
+
+Give execute permission:
+
+```bash
+chmod +x process_logs.sh
+```
+
+Run:
+
+```bash
+./process_logs.sh
+```
+
+---
+
+# Generating a Large Test File
+
+A test file containing one million log entries can be generated using:
+
+```bash
+for i in $(seq 1 1000000); do
+    echo "2026-08-24 INFO Server processing request $i"
+done > system.log
+```
+
+This generates one million INFO entries.
+
+To add ERROR entries:
+
+```bash
+for i in $(seq 1 10000); do
+    echo "2026-08-24 ERROR Server connection failed $i"
+done >> system.log
+```
+
+---
+
+# Simple AWK Version
+
+For simply counting errors:
+
+```bash
+awk '/ERROR/ {count++} END {print "Total ERROR entries:", count}' system.log
+```
+
+---
+
+## Explanation of the Code
+
+### Step 1
+
+```bash
+LOGFILE="system.log"
+```
+
+Stores the name of the input log file.
+
+### Step 2
+
+```bash
+START=$(date +%s)
+```
+
+Stores the starting time in seconds.
+
+### Step 3
+
+```bash
+LC_ALL=C awk '
+/ERROR/ {
+    error_count++
+}
+END {
+    print "Total ERROR entries:", error_count
+}
+' "$LOGFILE"
+```
+
+`awk` reads the file line by line.
+
+Whenever a line contains `ERROR`, the counter is increased.
+
+At the end of the file, the total number of errors is displayed.
+
+### Step 4
+
+```bash
+END=$(date +%s)
+```
+
+Stores the ending time.
+
+### Step 5
+
+```bash
+ELAPSED=$((END - START))
+```
+
+Calculates the total processing time.
+
+### Step 6
+
+```bash
+if [ "$ELAPSED" -le 120 ]
+```
+
+Checks whether the processing time is less than or equal to 120 seconds.
+
+---
+
+## Measuring Execution Time
+
+The script can also be tested using:
+
+```bash
+time ./process_logs.sh
+```
+
+Example output:
+
+```text
+Processing log file...
+File: system.log
+
+Total ERROR entries: 10000
+Processing time: 8 seconds
+
+SUCCESS: Processing completed within 2 minutes.
+```
+
+---
+
+# Parallel Processing
+
+For extremely large log files, the file can be divided into multiple parts.
+
+```bash
+split -n l/4 system.log log_part_
+```
+
+This divides the file into four parts.
+
+The parts can then be processed simultaneously:
+
+```bash
+for file in log_part_*; do
+    awk '/ERROR/ {count++} END {print count}' "$file" &
+done
+
+wait
+```
+
+The `&` runs each process in the background.
+
+The `wait` command waits until all background processes finish.
+
+---
+
+## Why `awk` Is Suitable
+
+`awk` is suitable because:
+
+* It processes files line by line.
+* It avoids unnecessary intermediate files.
+* It can perform searching and counting in one pass.
+* It reduces process creation overhead.
+* It is suitable for large text files.
+
+---
+
+## Conclusion
+
+The use of `awk` provides an efficient one-pass solution for processing large log files.
+
+The execution time is measured using shell commands, and the result is compared with the 120-second constraint.
+
+Therefore, the solution can efficiently process approximately one million log entries while meeting the required performance constraint.
+
+---
+
+# Q4. Managing a Faulty Process Consuming 90% CPU
+
+## Problem Statement
+
+A Linux system runs multiple background services.
+
+One faulty process is consuming approximately 90% of CPU resources.
+
+The system must not be restarted, and critical services must continue to operate.
+
+---
+
+## Objective
+
+The objective is to:
+
+1. Identify the faulty process.
+2. Monitor its CPU usage.
+3. Reduce its impact on the system.
+4. Control the process.
+5. Terminate it only when necessary.
+6. Ensure critical services remain operational.
+
+---
+
+# Step 1: Identify the Process
+
+Use:
+
+```bash
+ps aux --sort=-%cpu | head
+```
+
+This displays processes sorted according to CPU usage.
+
+Example:
+
+```text
+USER   PID   %CPU   %MEM   COMMAND
+root  2450   90.2   2.1    faulty_app
+root  1200   15.4   1.3    service_a
+```
+
+The process with PID `2450` is consuming approximately 90% CPU.
+
+---
+
+# Step 2: Monitor the Process
+
+Use:
+
+```bash
+top -p 2450
+```
+
+Another command is:
+
+```bash
+pidstat -p 2450 1
+```
+
+The commands continuously display CPU usage and other process information.
+
+---
+
+# Step 3: Reduce Process Priority
+
+```bash
+sudo renice 10 -p 2450
+```
+
+This lowers the scheduling priority of the process.
+
+The operating system can then give more CPU time to important processes.
+
+---
+
+# Step 4: Restrict CPU Affinity
+
+```bash
+sudo taskset -cp 0-1 2450
+```
+
+This restricts the process to CPU cores 0 and 1.
+
+This prevents it from using every available CPU core.
+
+---
+
+# Step 5: Limit CPU Usage
+
+If `cpulimit` is installed:
+
+```bash
+sudo cpulimit -p 2450 -l 30
+```
+
+This attempts to restrict the process to approximately 30% CPU usage.
+
+---
+
+# Step 6: Graceful Termination
+
+If the process remains faulty, first send SIGTERM:
+
+```bash
+sudo kill -TERM 2450
+```
+
+SIGTERM requests the process to terminate gracefully.
+
+Check whether the process has stopped:
+
+```bash
+ps -p 2450
+```
+
+If the process does not terminate, SIGKILL can be used:
+
+```bash
+sudo kill -KILL 2450
+```
+
+SIGKILL immediately terminates the process and should be used only as a last resort.
+
+---
+
+# Process Management Shell Script
+
+Create:
+
+```text
+process_control.sh
+```
+
+Code:
+
+```bash
+#!/bin/bash
+
+PID=$1
+
+if [ -z "$PID" ]; then
+    echo "Usage: $0 <PID>"
+    exit 1
+fi
+
+if ! ps -p "$PID" > /dev/null; then
+    echo "Process $PID does not exist."
+    exit 1
+fi
+
+echo "================================"
+echo "PROCESS MANAGEMENT"
+echo "================================"
+
+echo
+echo "Process information:"
+ps -p "$PID" -o pid,comm,%cpu,%mem,stat
+
+echo
+echo "Current CPU usage:"
+ps -p "$PID" -o %cpu=
+
+echo
+echo "Reducing process priority..."
+sudo renice 10 -p "$PID"
+
+echo
+echo "Restricting process to CPUs 0 and 1..."
+sudo taskset -cp 0-1 "$PID"
+
+echo
+echo "Updated process information:"
+ps -p "$PID" -o pid,comm,%cpu,%mem,stat
+
+echo
+echo "Process has been controlled successfully."
+echo "Critical system services have not been restarted."
+```
+
+---
+
+## Running the Program
+
+```bash
+chmod +x process_control.sh
+```
+
+Run:
+
+```bash
+sudo ./process_control.sh 2450
+```
+
+---
+
+## Sample Output
+
+```text
+================================
+PROCESS MANAGEMENT
+================================
+
+Process information:
+ PID   COMMAND       %CPU   %MEM   STAT
+2450  faulty_app    90.2   2.1    R
+
+Current CPU usage:
+90.2
+
+Reducing process priority...
+2450 (process ID) old priority 0, new priority 10
+
+Restricting process to CPUs 0 and 1...
+pid 2450's new affinity list: 0-1
+
+Updated process information:
+ PID   COMMAND       %CPU   %MEM   STAT
+2450  faulty_app    28.4   2.1    R
+
+Process has been controlled successfully.
+Critical system services have not been restarted.
+```
+
+---
+
+# Checking Critical Services
+
+To check whether any services have failed:
+
+```bash
+systemctl --failed
+```
+
+To check a particular service:
+
+```bash
+systemctl status ssh
+```
+
+The system can continue operating without restarting the entire machine.
+
+---
+
+# Process Management Strategy
+
+```text
+Identify Process
+       |
+       v
+Monitor CPU Usage
+       |
+       v
+Reduce Priority
+       |
+       v
+Restrict CPU Affinity
+       |
+       v
+Limit CPU Usage
+       |
+       v
+Check System Performance
+       |
+       v
+Graceful Termination
+       |
+       v
+Force Kill if Necessary
+```
+
+---
+
+## Explanation
+
+The process should not immediately be terminated because it may be performing an important operation.
+
+The first step is to identify and monitor the process.
+
+After identifying it, its priority can be reduced using `renice`.
+
+CPU affinity can then be used to restrict the process to specific CPU cores.
+
+If the process remains problematic, CPU usage can be limited.
+
+Only when these approaches are unsuccessful should the process be terminated.
+
+---
+
+## Conclusion
+
+The proposed process management strategy controls the faulty process without restarting the Linux system.
+
+Using `ps`, `top`, `pidstat`, `renice`, `taskset`, and `kill` allows the administrator to identify, monitor, control, and terminate the process safely.
+
+Critical services remain operational throughout the process.
+
+---
+
+# Q5. RAM Allocation for 5 Virtual Machines
+
+## Problem Statement
+
+A physical server must host five virtual machines.
+
+The server has a total of 16 GB RAM.
+
+The constraints are:
+
+* Total physical RAM = 16 GB
+* Host operating system requirement = 4 GB
+* Number of virtual machines = 5
+* Minimum RAM per VM = 2 GB
+
+---
+
+## Objective
+
+The objective is to design an efficient RAM allocation strategy that ensures all five virtual machines receive their minimum memory requirement while maintaining sufficient memory for the host operating system.
+
+---
+
+# RAM Calculation
+
+Total RAM:
+
+```text
+16 GB
+```
+
+RAM required by the host:
+
+```text
+4 GB
+```
+
+RAM available for VMs:
+
+```text
+16 - 4 = 12 GB
+```
+
+Minimum RAM required by five VMs:
+
+```text
+5 × 2 = 10 GB
+```
+
+Remaining RAM:
+
+```text
+12 - 10 = 2 GB
+```
+
+Therefore:
+
+```text
+Host OS = 4 GB
+VM1 = 2 GB
+VM2 = 2 GB
+VM3 = 2 GB
+VM4 = 2 GB
+VM5 = 2 GB
+Reserve = 2 GB
+Total = 16 GB
+```
+---
+# Proposed RAM Allocation
+
+| Component       |       RAM |
+| --------------- | --------: |
+| Host OS         |      4 GB |
+| VM1             |      2 GB |
+| VM2             |      2 GB |
+| VM3             |      2 GB |
+| VM4             |      2 GB |
+| VM5             |      2 GB |
+| Reserved Memory |      2 GB |
+| **Total**       | **16 GB** |
+---
+# Why Keep 2 GB Reserved?
+The remaining 2 GB should be kept as a safety margin instead of immediately allocating it to the VMs.
+It can be used for:
+* Host OS memory spikes
+* Hypervisor overhead
+* Temporary workload increases
+* File-system caching
+* Unexpected memory requirements
+This improves system stability.
+---
+# Checking Physical Memory
+Use:
+```bash
+free -h
+```
+
+Example:
+
+```text
+              total        used        free
+Mem:           16Gi         5Gi        11Gi
+Swap:           4Gi         0Gi         4Gi
+```
+---
+# Using KVM/libvirt
+The `virsh` command can be used to configure VM memory.
+For VM1:
+```bash
+sudo virsh setmem VM1 2G --config
+```
+For all five VMs:
+
+```bash
+sudo virsh setmem VM1 2G --config
+sudo virsh setmem VM2 2G --config
+sudo virsh setmem VM3 2G --config
+sudo virsh setmem VM4 2G --config
+sudo virsh setmem VM5 2G --config
+```
+---
+# Checking VM Memory
+```bash
+sudo virsh dominfo VM1
+```
+This displays information about the virtual machine, including its configured memory.
+---
+# Automated VM Memory Allocation Script
+
+Create:
+
+```text
+vm_memory_allocation.sh
+```
+Code:
+
+```bash
+#!/bin/bash
+
+VMS=("VM1" "VM2" "VM3" "VM4" "VM5")
+
+VM_MEMORY="2G"
+
+echo "========================================"
+echo "VIRTUAL MACHINE MEMORY ALLOCATION"
+echo "========================================"
+
+echo
+echo "Host OS reserved memory: 4 GB"
+echo "Memory reserved for flexibility: 2 GB"
+echo "Memory allocated to each VM: 2 GB"
+
+echo
+
+for VM in "${VMS[@]}"
+do
+
+    echo "Allocating $VM_MEMORY to $VM"
+
+    sudo virsh setmem "$VM" "$VM_MEMORY" --config
+
+    if [ $? -eq 0 ]; then
+        echo "$VM: Allocation successful"
+    else
+        echo "$VM: Allocation failed"
+    fi
+    echo
+done
+echo "========================================"
+echo "Memory allocation completed."
+echo "========================================"
+``
+
+---
+## Running the Program
+Give execute permission:
+```bash
+chmod +x vm_memory_allocation.sh
+```
+Run:
+```bash
+sudo ./vm_memory_allocation.sh
+```
+---
+## Sample Output
+```text
+========================================
+VIRTUAL MACHINE MEMORY ALLOCATION
+========================================
+Host OS reserved memory: 4 GB
+Memory reserved for flexibility: 2 GB
+Memory allocated to each VM: 2 GB
+Allocating 2G to VM1
+VM1: Allocation successful
+Allocating 2G to VM2
+VM2: Allocation successful
+Allocating 2G to VM3
+VM3: Allocation successful
+Allocating 2G to VM4
+VM4: Allocation successful
+Allocating 2G to VM5
+VM5: Allocation successful
+========================================
+Memory allocation completed.
+=======================================
+```
+---
+# Virtualization Concepts
+## 1. Memory Allocation
+Memory allocation determines how much physical memory is assigned to each virtual machine.
+Each VM receives at least 2 GB as required by the problem.
+---
+## 2. Memory Reservation
+4 GB is reserved for the host operating system.
+This prevents the virtual machines from consuming all available physical memory.
+---
+## 3. Memory Overcommit
+Memory overcommit allows the hypervisor to allocate more virtual memory than the available physical memory.
+However, it is not recommended for this problem because every VM has a strict minimum requirement.
+---
+## 4. Memory Ballooning
+Memory ballooning allows the hypervisor to dynamically reclaim or provide memory to virtual machines when required.
+It can help improve memory utilization when supported by the guest operating system and virtualization platform.
+---
+# Resource Allocation Diagram
+
+```text
+                PHYSICAL SERVER
+                    16 GB RAM
+                        |
+        +---------------+---------------+
+        |                               |
+      HOST OS                        VM MEMORY
+       4 GB                            10 GB
+                                        |
+                  +---------+-----------+---------+
+                  |         |         |         |         |
+                VM1       VM2       VM3       VM4       VM5
+                2 GB      2 GB      2 GB      2 GB      2 GB
+
+                    Remaining: 2 GB
+                      Reserved
+```
+---
+## Final Calculation
+```text
+Host OS              = 4 GB
+VM1                  = 2 GB
+VM2                  = 2 GB
+VM3                  = 2 GB
+VM4                  = 2 GB
+VM5                  = 2 GB
+VM Total             = 10 GB
+Reserved             = 2 GB
+Total                = 4 + 10 + 2
+                     = 16 GB
+```
+---
+## Conclusion
+The safest allocation strategy is:
+```text
+4 GB → Host OS
+2 GB → VM1
+2 GB → VM2
+2 GB → VM3
+2 GB → VM4
+2 GB → VM5
+2 GB → Reserved
+```
+This satisfies the minimum 2 GB requirement of every virtual machine while maintaining 4 GB for the host operating system and preserving 2 GB of reserve memory.
+---
+# Overall Conclusion
+The five problems demonstrate how Linux can be used to solve real-world system constraints through effective resource management.
+### Q1 – Storage Management
+A separate `/var/log` partition and logrotate prevent logs from consuming the entire disk.
+### Q2 – CPU Optimization
+CPU affinity, process priority, scheduling policies, and kernel tuning can reduce unnecessary context switching.
+### Q3 – Log Processing
+`awk` provides an efficient one-pass solution for processing large log files and helps satisfy the 2-minute performance constraint.
+### Q4 – Process Management
+Linux tools such as `ps`, `top`, `pidstat`, `renice`, `taskset`, and `kill` allow administrators to control faulty processes without restarting the system.
+### Q5 – Virtualization
+Proper memory allocation ensures that the host operating system and all five virtual machines receive sufficient resources while maintaining a safety reserve.
+# Important Linux Commands Used
+ Command     | Purpose          
+ `df -h`     | Check filesystem disk usage     |
+ `du -sh`    | Check directory size            |
+ `sort`      | Sort command output             |
+ `head`      | Display first entries           |
+ `logrotate` | Rotate and compress logs        |
+ `vmstat`    | Monitor system performance      |
+`pidstat`   | Monitor process statistics      |
+ `taskset`   | Set CPU affinity                |
+ `nice`      | Start a process with a priority |
+ `renice`    | Change process priority         |
+ `chrt`      | Configure scheduling policy     |
+ `sysctl`    | Modify kernel parameters        |
+ `ps`        | Display running processes       |
+ `top`       | Monitor processes               |
+ `kill`      | Send signals to processes       |
+ `systemctl` | Manage system services          |
+`awk`       | Process text efficiently        |
+ `split`     | Split large files               |
+`free`      | Display memory usage            |
+ `virsh`     | Manage virtual machines         |
+---
+# Files Used in the Project
+```text
+constraint-based-problem-solving/
+│
+├── README.md
+│
+├── Q1_File_System/
+│   ├── log_monitor.sh
+│   └── logrotate.conf
+│
+├── Q2_CPU_Optimization/
+│   └── cpu_optimize.sh
+│
+├── Q3_Log_Processing/
+│   └── process_logs.sh
+│
+├── Q4_Process_Management/
+│   └── process_control.sh
+│
+└── Q5_VM_Memory/
+    └── vm_memory_allocation.sh
+# Final Result
+The proposed Linux solutions satisfy the constraints given in all five problems:
+* **50 GB storage** is efficiently partitioned.
+* **Log usage is controlled at 10 GB.**
+* **CPU scheduling and context switching are optimized.**
+* **1 million log entries can be processed efficiently using shell scripting.**
+* **A faulty 90% CPU process can be controlled without restarting the system.**
+* **Five VMs receive their required 2 GB RAM each within the 16 GB constraint.**
+These solutions demonstrate practical applications of Linux commands, shell scripting, process management, scheduling, storage management, and virtualization.
