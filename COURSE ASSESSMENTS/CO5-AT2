@@ -1,0 +1,216 @@
+CSA04 – OPERATING SYSTEMS
+CO5 – PSEUDOCODE WRITING TASK
+NAME:SHAHANA K
+REGNO:192524032
+
+Q1. FILE SYSTEM SPACE MANAGEMENT
+
+BEGIN
+
+    SET threshold = 80%
+
+    usage = GET_DISK_USAGE()
+
+    IF usage > threshold THEN
+
+        PRINT "Disk usage is above 80%"
+
+        log_files = GET_LOG_FILES()
+
+        SORT log_files BY size DESCENDING
+
+        FOR each file IN log_files DO
+
+            IF file is old OR file is very large THEN
+
+                COMPRESS file
+
+                PRINT "Log file compressed"
+
+            ELSE
+
+                DELETE file
+
+                PRINT "Log file deleted"
+
+            ENDIF
+
+            usage = GET_DISK_USAGE()
+
+            IF usage <= threshold THEN
+
+                PRINT "Disk usage is now within safe limit"
+
+                BREAK
+
+            ENDIF
+
+        ENDFOR
+
+    ELSE
+
+        PRINT "Disk usage is within safe limit"
+
+    ENDIF
+
+END
+Q2. PRIORITY-BASED CPU SCHEDULING
+
+BEGIN
+
+    INPUT process_list
+
+    IF process_list is EMPTY THEN
+
+        PRINT "No processes available"
+
+    ELSE
+
+        SORT process_list BY priority
+        // Highest priority process comes first
+
+        WHILE process_list is NOT EMPTY DO
+
+            SELECT process WITH highest priority
+
+            PRINT "Executing selected process"
+
+            ALLOCATE CPU time
+
+            EXECUTE process
+
+            IF process is COMPLETED THEN
+
+                REMOVE process from process_list
+
+                PRINT "Process completed"
+
+            ELSE
+
+                REDUCE priority slightly
+
+                REMOVE process from process_list
+
+                ADD process back to process_list
+
+                SORT process_list BY priority
+
+            ENDIF
+
+        ENDWHILE
+
+        PRINT "All processes completed"
+
+    ENDIF
+
+END
+
+Q3. RAM RESOURCE ALLOCATION FOR VIRTUAL MACHINES
+
+BEGIN
+
+    SET total_RAM = 16 GB
+
+    SET host_reserved = 4 GB
+
+    available_RAM = total_RAM - host_reserved
+
+    INPUT number_of_VMs
+
+    SET min_RAM = 2 GB
+
+    IF number_of_VMs <= 0 THEN
+
+        PRINT "Invalid number of VMs"
+
+    ELSE
+
+        FOR i = 1 TO number_of_VMs DO
+
+            IF available_RAM >= min_RAM THEN
+
+                ALLOCATE min_RAM TO VM[i]
+
+                available_RAM = available_RAM - min_RAM
+
+                PRINT "RAM allocated to VM", i
+
+            ELSE
+
+                PRINT "Insufficient RAM for VM", i
+
+            ENDIF
+
+        ENDFOR
+
+    ENDIF
+
+    PRINT "Remaining RAM =", available_RAM
+
+END
+Q4. HYPERVISOR SELECTION
+
+BEGIN
+
+    INPUT performance_required
+
+    INPUT budget
+
+    INPUT hardware_access
+
+    IF performance_required = HIGH AND hardware_access = TRUE THEN
+
+        selected_hypervisor = "Type 1 Hypervisor"
+
+        reason = "High performance and direct hardware access"
+
+    ELSE IF budget = LOW THEN
+
+        selected_hypervisor = "Type 2 Hypervisor"
+
+        reason = "Lower cost and easier to use"
+
+    ELSE
+
+        selected_hypervisor = "Type 1 Hypervisor"
+
+        reason = "Better overall performance"
+
+    ENDIF
+
+    PRINT "Selected Hypervisor =", selected_hypervisor
+
+    PRINT "Reason =", reason
+
+END
+Q5. CPU AND MEMORY RESOURCE LIMITING
+
+BEGIN
+
+    INPUT application_list
+
+    IF application_list is EMPTY THEN
+
+        PRINT "No applications available"
+
+    ELSE
+
+        FOR each app IN application_list DO
+
+            CREATE cgroup for app
+
+            SET CPU limit for app
+
+            SET memory limit for app
+
+            ASSIGN app process TO cgroup
+
+            PRINT "CPU and memory limits applied to", app
+
+        ENDFOR
+
+        PRINT "All applications are controlled"
+
+    ENDIF
+
+END
