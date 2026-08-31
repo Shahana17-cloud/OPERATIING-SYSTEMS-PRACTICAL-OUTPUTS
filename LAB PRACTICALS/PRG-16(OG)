@@ -1,0 +1,42 @@
+directories = {}
+
+while True:
+    print("\n1. Create User")
+    print("2. Create File")
+    print("3. List Files")
+    print("4. Exit")
+
+    choice = int(input("Enter choice: "))
+
+    if choice == 1:
+        user = input("Enter user name: ")
+
+        if user in directories:
+            print("User already exists")
+        else:
+            directories[user] = []
+            print("User directory created")
+
+    elif choice == 2:
+        user = input("Enter user name: ")
+
+        if user not in directories:
+            print("User not found")
+        else:
+            file = input("Enter file name: ")
+            directories[user].append(file)
+            print("File created")
+
+    elif choice == 3:
+        user = input("Enter user name: ")
+
+        if user not in directories:
+            print("User not found")
+        else:
+            print("Files:", directories[user])
+
+    elif choice == 4:
+        break
+
+    else:
+        print("Invalid choice")
