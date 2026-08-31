@@ -1,0 +1,15 @@
+import os
+
+fd = os.open("sample.txt", os.O_CREAT | os.O_WRONLY)
+
+data = b"UNIX System Calls in Python"
+os.write(fd, data)
+
+os.close(fd)
+
+fd = os.open("sample.txt", os.O_RDONLY)
+
+content = os.read(fd, 100)
+print("File Content:", content.decode())
+
+os.close(fd)
