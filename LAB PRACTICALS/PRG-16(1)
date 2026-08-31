@@ -1,0 +1,23 @@
+import pickle
+
+employees = [
+    (101, "Arun", 25000),
+    (102, "Bala", 30000),
+    (103, "Shan", 35000),
+    (104, "Ravi", 28000)
+]
+
+with open("employee.dat", "wb") as f:
+    for emp in employees:
+        pickle.dump(emp, f)
+
+position = int(input("Enter employee position (1-4): "))
+
+with open("employee.dat", "rb") as f:
+    for _ in range(position):
+        employee = pickle.load(f)
+
+    print("Employee Details")
+    print("ID:", employee[0])
+    print("Name:", employee[1])
+    print("Salary:", employee[2])
