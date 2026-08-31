@@ -1,0 +1,41 @@
+import threading
+import time
+
+N = 5
+forks = [threading.Semaphore(1) for _ in range(N)]
+
+def philosopher(i):
+    left = i
+    right = (i + 1) % N
+
+    for _ in range(2):
+        print(f"Philosopher {i + 1} is thinking")
+        time.sleep(1)
+
+        # Prevent deadlock by changing order for last philosopher
+        if i == N - 1:
+            forks[right].acquire()
+            forks[left].acquire()
+        else:
+            forks[left].acquire()
+            forks[right].acquire()
+
+        print(f"Philosopher {i + 1} is eating")
+        time.sleep(1)
+
+        forks[left].release()
+        forks[right].release()
+
+        print(f"Philosopher {i + 1} finished eating")
+
+threads = []
+
+for i in range(N):
+    t = threading.Thread(target=philosopher, args=(i,))
+    threads.append(t)
+    t.start()
+
+for t in threads:
+    t.join()
+
+print("Dining Philosophers simulation completed.")
