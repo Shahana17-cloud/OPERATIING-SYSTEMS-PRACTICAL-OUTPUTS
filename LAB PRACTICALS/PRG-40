@@ -1,0 +1,44 @@
+#include <stdio.h>
+#include <sys/stat.h>
+
+int main() {
+    struct stat file;
+    char filename[100];
+
+    printf("Enter file name: ");
+    scanf("%s", filename);
+
+    if (stat(filename, &file) != 0) {
+        printf("File not found.\n");
+        return 1;
+    }
+
+    printf("\nFile Permissions:\n");
+
+    printf("Owner : ");
+    printf((file.st_mode & S_IRUSR) ? "r" : "-");
+    printf((file.st_mode & S_IWUSR) ? "w" : "-");
+    printf((file.st_mode & S_IXUSR) ? "x\n" : "-\n");
+
+    printf("Group : ");
+    printf((file.st_mode & S_IRGRP) ? "r" : "-");
+    printf((file.st_mode & S_IWGRP) ? "w" : "-");
+    printf((file.st_mode & S_IXGRP) ? "x\n" : "-\n");
+
+    printf("Others: ");
+    printf((file.st_mode & S_IROTH) ? "r" : "-");
+    printf((file.st_mode & S_IWOTH) ? "w" : "-");
+    printf((file.st_mode & S_IXOTH) ? "x\n" : "-\n");
+
+    printf("\nPermission Types:\n");
+    printf("r = Read\n");
+    printf("w = Write\n");
+    printf("x = Execute\n");
+
+    printf("\nUser Types:\n");
+    printf("1. Owner - User who owns the file\n");
+    printf("2. Group - Users belonging to the file's group\n");
+    printf("3. Others - All other users\n");
+
+    return 0;
+}
